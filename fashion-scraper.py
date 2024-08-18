@@ -5,6 +5,32 @@ from urllib.parse import urljoin, urlparse
 import re
 import time
 
+# Translations dictionary
+translations = {
+    'en': {
+        'title': "Fashion Brand Website Scraper",
+        'language': "Language",
+        'url_input': "Enter the fashion brand's homepage URL:",
+        'start_button': "Start Scraping",
+        'url_error': "Please enter a URL.",
+        'scraping': "Scraping:",
+        'complete': "Scraping complete!",
+        'content_header': "Scraped Content",
+        'download_button': "Download scraped content",
+    },
+    'ko': {
+        'title': "패션 브랜드 웹사이트 스크레이퍼",
+        'language': "언어",
+        'url_input': "패션 브랜드의 홈페이지 URL을 입력하세요:",
+        'start_button': "스크레이핑 시작",
+        'url_error': "URL을 입력해주세요.",
+        'scraping': "스크레이핑 중:",
+        'complete': "스크레이핑 완료!",
+        'content_header': "스크레이핑된 내용",
+        'download_button': "스크레이핑된 내용 다운로드",
+    }
+}
+
 def get_nav_links(soup, base_url):
     nav_links = []
     for a in soup.find_all('a', href=True):
@@ -37,7 +63,7 @@ def extract_body_content(soup):
 
     return text_content + '\n' + '\n'.join(alt_texts)
 
-def scrape_website(start_url, progress_bar, status_text):
+def scrape_website(start_url, progress_bar, status_text, lang):
     visited = set()
     to_visit = [start_url]
     content = []
@@ -48,7 +74,7 @@ def scrape_website(start_url, progress_bar, status_text):
             continue
 
         visited.add(url)
-        status_text.text(f"Scraping: {url}")
+        status_text.text(f"{translations[lang]['scraping']} {url}")
 
         try:
             response = requests.get(url)
@@ -72,27 +98,34 @@ def scrape_website(start_url, progress_bar, status_text):
     return '\n'.join(content)
 
 def main():
-    st.title("Fashion Brand Website Scraper")
+    # Language selector
+    lang = st.sidebar.selectbox(
+        "Language / 언어",
+        options=['en', 'ko'],
+        format_func=lambda x: "English" if x == 'en' else "한국어"
+    )
 
-    start_url = st.text_input("Enter the fashion brand's homepage URL:")
+    st.title(translations[lang]['title'])
+
+    start_url = st.text_input(translations[lang]['url_input'])
     
-    if st.button("Start Scraping"):
+    if st.button(translations[lang]['start_button']):
         if not start_url:
-            st.error("Please enter a URL.")
+            st.error(translations[lang]['url_error'])
             return
 
         progress_bar = st.progress(0)
         status_text = st.empty()
 
-        content = scrape_website(start_url, progress_bar, status_text)
+        content = scrape_website(start_url, progress_bar, status_text, lang)
 
-        st.success("Scraping complete!")
+        st.success(translations[lang]['complete'])
         
-        st.subheader("Scraped Content")
+        st.subheader(translations[lang]['content_header'])
 
         # Download button at the top of the results
         st.download_button(
-            label="Download scraped content",
+            label=translations[lang]['download_button'],
             data=content,
             file_name="scraped_content.txt",
             mime="text/plain"
